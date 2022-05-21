@@ -3,16 +3,16 @@ title: "PRAC2: Limpieza y análisis de datos"
 author: Xiaolin Ye, Javier Galan
 date: "Mayo 2022"
 output:
+    pdf_document:
+      number_section: yes
+      toc: yes
+      toc_depth: 2
     html_document:
       number_sections: yes
       toc: true
       toc_depth: 2
       theme: united
       df_print: paged
-    pdf_document:
-      number_section: yes
-      toc: yes
-      toc_depth: 2
 lang: es
 ---
 
@@ -21,7 +21,7 @@ knitr::opts_chunk$set(eval=T, echo=T)
 ```
 
 *****
-# Descripción del dataset
+# Descripción del dataset (completado, a revisars)
 
 El dataset elegidos proviene de Kaggle, describe en él la información de los pasajeros de Titanic (género, edad...), las condiciones de embargue (tipo de clase, cabina..) y si sobrevivió el accidente. 
 
@@ -55,25 +55,56 @@ dim(datos_titanic)
 str(datos_titanic)
 ```
 
-Gracias a la función str() sabemos  si las varibales son categoricas o discretas:
+Gracias a la función str() sabemos  si las varibales son categoricas o numéricas:
 
+ * PassengerId: int. variable cuantitativo.
+    
+    Numéro entero ordinal que identifica a cada uno de los pasajeros.
+ 
+ * Survived   : int. variable cualitativo.
+    
+    Código numérico que identifica el estado de supervivencia de los pasajeros tras el accidente
+    
+ * Pclass     : int. variable cuantitativo.
+ 
+    Clase del ticket que posee el pasajero, 1 = primera, 2 = segunda y 3 = tercera
+    
+ * Name       : chr. variable cualitativo.
+ 
+    Nombre del pasajero
+    
+ * Sex        : chr. variable cualitativo.
+    
+    Género del pasajero
+    
+ * Age        : num. variable cuantitativo.
+ 
+    Edad del pasajero
+    
+ * SibSp      : int. variable cuantitativo.
+ 
+    Numéro de hermanos/pareja a bordo
+    
+ * Parch      : int. variable cuantitativo.
+ 
+    Numéro de padres/hijos a bordo
+    
+ * Ticket     : chr. vairable cualitativo
+ 
+    Identificador del ticket
+    
+ * Fare       : num. variable cuantitativo.
+ 
+    Precio del ticket
+    
+ * Cabin      : chr. variable cuantitativo.
+ 
+    Identificador de la cabina
+    
+ * Embarked   : chr. variable cuantitativo.
 
-### Descripcion del Daset: (*ampliar*)
-
- * PassengerId: int  
- * Survived   : int  
- * Pclass     : int   
- * Name       : chr  
- * Sex        : chr  
- * Age        : num  
- * SibSp      : int  
- * Parch      : int  
- * Ticket     : chr  
- * Fare       : num  
- * Cabin      : chr  
- * Embarked   : chr  
-
-
+    Puerto de embargue. C = Cherbourg, Q = Queenstown, S = Southampton
+    
 *****
 
 # Limipeza de datos
