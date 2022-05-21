@@ -22,9 +22,70 @@ knitr::opts_chunk$set(eval=T, echo=T)
 
 *****
 # Descripción del dataset
+
+El dataset elegidos proviene de Kaggle, describe en él la información de los pasajeros de Titanic (género, edad...), las condiciones de embargue (tipo de clase, cabina..) y si sobrevivió el accidente. 
+
+El principal objetivo para analizar estos datos es la predicción de la supervivencia de los pasajeros, para ello nos facilita un juego de datos de entrenamiento "train.csv" como la base para el aprendizaje supervisado y otro juego de "test.csv" que sirve para evaluar la precisión de la predicción.
+
+Esta tarea también forma parte de una competición que celebra Kaggle donde los participantes suben sus trabajos y compiten por ser la mejor implementación que resuelve la pregunta clave:
+
+¿Qué tipo de pasajero tiene mayor probabilidad de sobrevivir?
+
+##Lectura de los datos:
+
+Para crear nuestro modelo, primero leemos los datos de entrenamiento.
+```{r message=FALSE, warning=FALSE}
+datos_titanic <-read.csv("train.csv",header=T,sep=",")
+attach(datos_titanic)
+```
+
+Hacemos un breve análisis de los datos ya que nos interesa tener una idea general de los datos que disponemos. 
+## Exploración de la base de datos
+
+Primero calcularemos las dimensiones de nuestra base de datos y analizaremos qué tipos de atributos tenemos.
+
+Calculamos las dimensiones de la base de datos mediante la función dim(). Obtenemos que disponemos de 891 registros o pasajeros (filas) y 12 variables (columnas). 
+
+```{r}
+dim(datos_titanic)
+```
+
+¿Cuáles son esas variables? 
+```{r}
+str(datos_titanic)
+```
+
+Gracias a la función str() sabemos  si las varibales son categoricas o discretas:
+
+
+### Descripcion del Daset: (*ampliar*)
+
+ * PassengerId: int  
+ * Survived   : int  
+ * Pclass     : int   
+ * Name       : chr  
+ * Sex        : chr  
+ * Age        : num  
+ * SibSp      : int  
+ * Parch      : int  
+ * Ticket     : chr  
+ * Fare       : num  
+ * Cabin      : chr  
+ * Embarked   : chr  
+
+
 *****
 
 # Limipeza de datos
+
+Es de gran interés saber si tenemos muchos valores nulos (campos vacíos) y la distribución de valores por variables. Es por ello recomendable empezar el análisis con una visión general de las variables. Mostraremos para cada atributo la cantidad de valores perdidos mediante la función summary.  
+
+
+```{r}
+summary(datos_titanic)
+```
+
+
 ## Selección de datos
 ## Valores anormales
 ## Valores extremos
@@ -70,64 +131,7 @@ Complementarios:
   
 *7.     Código: Hay que adjuntar el código, preferiblemente en R, con el que se ha realizado la        limpieza, análisis y representación de los datos. Si lo preferís, también podéis trabajar     en Python.*
 
-## Análisis inicial
 
-#Lectura de los datos:
-
-```{r message=FALSE, warning=FALSE}
-datos_titanic <-read.csv("train.csv",header=T,sep=",")
-attach(datos_titanic)
-```
-
-
-
-Empezaremos haciendo un breve análisis de los datos ya que nos interesa tener una idea general de los datos que disponemos. 
-
-### Exploración de la base de datos
-
-Primero calcularemos las dimensiones de nuestra base de datos y analizaremos qué tipos de atributos tenemos.
-
-Para empezar, calculamos las dimensiones de la base de datos mediante la función dim(). Obtenemos que disponemos de 891 registros o pasajeros (filas) y 12 variables (columnas). 
-
-```{r}
-dim(datos_titanic)
-```
-
-¿Cuáles son esas variables? 
-```{r}
-str(datos_titanic)
-```
-
-
-
-Gracias a la función str() sabemos  si las varibales son categoricas o discretas:
-_______________
-
-
-### Descripcion del Daset: (*ampliar*)
-
- * PassengerId: int  
- * Survived   : int  
- * Pclass     : int   
- * Name       : chr  
- * Sex        : chr  
- * Age        : num  
- * SibSp      : int  
- * Parch      : int  
- * Ticket     : chr  
- * Fare       : num  
- * Cabin      : chr  
- * Embarked   : chr  
-
-
-
-
-Es de gran interés saber si tenemos muchos valores nulos (campos vacíos) y la distribución de valores por variables. Es por ello recomendable empezar el análisis con una visión general de las variables. Mostraremos para cada atributo la cantidad de valores perdidos mediante la función summary.  
-
-
-```{r}
-summary(datos_titanic)
-```
 
 
 
