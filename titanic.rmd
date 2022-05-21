@@ -117,7 +117,7 @@ Gracias a la función str() sabemos  si las varibales son categoricas o numéric
     
 *****
 
-# Limipeza de datos
+# Limipeza de datos (parcial, a completar)
 
 Para poder generar un modelo preciso y adecuado, es de vital importancia seleccionar, limpiar y transformar los datos en el caso de que sea necesario. 
 
@@ -171,15 +171,19 @@ titanic_train <- titanic_train[,c(2,3,5,6,7,8,10,11,12)]
 
 ## Valores nulos
 
-Es de gran interés saber si tenemos muchos valores nulos (campos vacíos) y la distribución de valores por variables. Es por ello recomendable empezar el análisis con una visión general de las variables. Mostraremos para cada atributo la cantidad de valores perdidos mediante la función summary.  
+Es de gran interés saber si tenemos muchos valores nulos (campos vacíos) y la distribución de valores por variables. Es por ello recomendable empezar el análisis con una visión general de las variables. 
 
+Mostraremos para cada atributo la cantidad de valores perdidos mediante la función summary.  
 
 ```{r}
-colSums(is.na(air_data))
-
-colSums(air_data == "")
+summary(titanic_train)
 ```
 
+Por otro lado, también necesitamos encontrar los valores vacíos, podemos usar colSums para saber la suma en cada columna.
+```{r}
+
+colSums(titanic_train == "")
+```
 
 ## Valores extremos
 
