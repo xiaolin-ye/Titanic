@@ -62,7 +62,7 @@ dim(titanic_test)
 
 ¿Cuáles son esas variables? 
 ```{r}
-str(datos_titanic)
+str(titanic_train)
 ```
 
 Gracias a la función str() sabemos  si las varibales son categoricas o numéricas:
@@ -107,11 +107,11 @@ Gracias a la función str() sabemos  si las varibales son categoricas o numéric
  
     Precio del ticket
     
- * *Cabin*      : chr. variable cuantitativo.
+ * *Cabin*      : chr. variable cualitativo.
  
     Identificador de la cabina
     
- * *Embarked*   : chr. variable cuantitativo.
+ * *Embarked*   : chr. variable cualitativo.
 
     Puerto de embargue. C = Cherbourg, Q = Queenstown, S = Southampton
     
@@ -157,6 +157,16 @@ Por otro lado, se observa algo de correlación entre las variables SibSp y Parch
 
 #### variables cualitativas
 
+Sabemos que el nombre de una persona viene de fuentes variadas y suele condicionar en los sucesos cotidianos de una forma determinista, por lo que no la incluiremos en nuestro modelo. 
+
+De igual manera a _PassengerId_, _Ticket_, este identificador vienen condicionados por otros factores que no suele relacionarse con los individuos directamente (como por ejemplo la empresa comercializadora, el puerto de embargue, la fecha de compra...), también lo descartaremos.
+
+Puesto que no tenemos más suposiciones lógicas sobre las demás variables, las vamos a mantener para los siguientes pasos de procesado/análisis.
+
+```{r}
+
+titanic_train <- titanic_train[,c(2,3,5,6,7,8,10,11,12)]
+```
 
 
 ## Valores nulos
