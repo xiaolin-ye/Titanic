@@ -185,8 +185,6 @@ Aunque una práctica común para completar los valores numéricos perdidos es po
 
 Por lo que se ha considerado que en este caso es preferible imputar estos valores basando en una serie de factores como por ejemplo clase, género, número de hermanos/pareja, padres/hijos y el precio del ticket. 
 
-### Imputación de valores perdidos numéricos
-
 ```{r}
 
 titanic_train = kNN(titanic_train, variable = "Age",
@@ -208,19 +206,50 @@ Como se puede ver, la variable _Cabin_ tiene un porcentaje de 77% de valores vac
 titanic_train <- titanic_train[-c(8)]
 ```
 
-Por otro lado, el puerto de embargue contiene una cantidad reducida de campos desconocidos, le asignaremos la categoría de _Unkown_.
+Por otro lado, el puerto de embargue contiene una cantidad reducida de campos desconocidos, le asignaremos la categoría de _U (Unkown)_.
 
 ```{r}
 table(titanic_train$Embarked)
 ```
 
 ```{r}
-titanic_train[titanic_train == ""] <- "Unknown"
+titanic_train[titanic_train == ""] <- "U"
 table(titanic_train$Embarked)
 ```
 
 ## Valores extremos
 
+### Valores numéricos
+
+Para los valores numéricos, lo más rápido para visualizar los outliers son los boxplots. 
+
+```{r}
+par(mfrow=c(2,2))
+age_box <- boxplot(titanic_train[,4], main = colnames(titanic_train[4]))
+sibSp_box <- boxplot(titanic_train[,5], main = colnames(titanic_train[5]))
+parch_box <- boxplot(titanic_train[,6], main = colnames(titanic_train[6]))
+fare_box <- boxplot(titanic_train[,7], main = colnames(titanic_train[7]))
+```
+
+A pesar de que podemos ver muchos puntos en las 4 gráficas, la gran mayoría de ellas están dentro de las posibilidades reales, con lo que se consideran valores anormales pero válidos para el estudio. 
+
+No obstante, los únicos datos con los que podemos tener alguna duda es el precio de ticket alrededor de 500, muy alejados de los otros valores del resto. 
+
+
+Para visualizar los outliers detectados, grafiamos un histograma para ver su distribución.
+```{r}
+hist_counts <- hist(fare_box$out)
+```
+
+A pesar de ser outliers, hay bastante cantidad de ellos, esto puede deberse que en un trayecto hay categorías muy diversas, con cantidades cada vez menores en clases crecientes y/o otros servicios que puede afectar al precio final.
+
+Si contamos la cantidad de estos tickes en cada bin, vemos que incluso en el rango de 500 hay más de 1 ticket vendido a ese precio, con lo que es poco probable que se trate de un error de escritura o recopilación de datos.
+
+```{r}
+hist_counts$counts
+```
+
+Como resumen, en este apartado no se hará tratamiento de ningún valor extremo ya que se pueden considerar válidos todos a pesar de presentar diferencia con la tendencia central de cada variable.
 
 
 # Análisis de los datos
