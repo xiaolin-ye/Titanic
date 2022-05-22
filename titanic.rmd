@@ -3,16 +3,16 @@ title: "PRAC2: Limpieza y análisis de datos"
 author: Xiaolin Ye, Javier Galan
 date: "Mayo 2022"
 output:
+    pdf_document:
+      number_section: yes
+      toc: yes
+      toc_depth: 2
     html_document:
       number_sections: yes
       toc: true
       toc_depth: 2
       theme: united
       df_print: paged
-    pdf_document:
-      number_section: yes
-      toc: yes
-      toc_depth: 2
 lang: es
 ---
 
@@ -21,6 +21,8 @@ knitr::opts_chunk$set(eval=T, echo=T)
 
 library(ggplot2)
 library(reshape2)
+library(VIM)
+
 ```
 
 *****
@@ -173,19 +175,53 @@ titanic_train <- titanic_train[,c(2,3,5,6,7,8,10,11,12)]
 
 Es de gran interés saber si tenemos muchos valores nulos (campos vacíos) y la distribución de valores por variables. Es por ello recomendable empezar el análisis con una visión general de las variables. 
 
-Mostraremos para cada atributo la cantidad de valores perdidos mediante la función summary.  
+Mostraremos para cada atributo la cantidad de valores perdidos mediante la función is.na.  
 
 ```{r}
-summary(titanic_train)
+colSums(is.na(titanic_train))
+```
+
+Aunque una práctica común para completar los valores numéricos perdidos es poner la media, en este caso al sospechar que puede afectar significativamente en el grado de supervivencia debemos de tratarlo con precaución ya que aumentar el valor de la tendencia central 177 veces en un juego de datos de 900 podemos crear una falsa conclusión. 
+
+Por lo que se ha considerado que en este caso es preferible imputar estos valores basando en una serie de factores como por ejemplo clase, género, número de hermanos/pareja, padres/hijos y el precio del ticket. 
+
+### Imputación de valores perdidos numéricos
+
+```{r}
+
+titanic_train = kNN(titanic_train, variable = "Age",
+         dist_var = c("Pclass","Sex", "SibSp", "Parch", "Fare"), imp_var = FALSE)
+
+colSums(is.na(titanic_train))
 ```
 
 Por otro lado, también necesitamos encontrar los valores vacíos, podemos usar colSums para saber la suma en cada columna.
+
 ```{r}
 
-colSums(titanic_train == "")
+colSums(titanic_train == "")/nrow(titanic_train)
+```
+
+Como se puede ver, la variable _Cabin_ tiene un porcentaje de 77% de valores vacíos, con un número tan alto de valores desconocidos no nos va a ser útil para construir el modelo. Es más, usar esta variable nos introducirá errores. Por lo que decidimos descartar esta variable dell dataset. 
+
+```{r}
+titanic_train <- titanic_train[-c(8)]
+```
+
+Por otro lado, el puerto de embargue contiene una cantidad reducida de campos desconocidos, le asignaremos la categoría de _Unkown_.
+
+```{r}
+table(titanic_train$Embarked)
+```
+
+```{r}
+titanic_train[titanic_train == ""] <- "Unknown"
+table(titanic_train$Embarked)
 ```
 
 ## Valores extremos
+
+
 
 # Análisis de los datos
 
