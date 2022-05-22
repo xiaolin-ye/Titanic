@@ -119,7 +119,7 @@ Gracias a la función str() sabemos  si las varibales son categoricas o numéric
     
 *****
 
-# Limipeza de datos (parcial, a completar)
+# Limipeza de datos (completado, a revisar)
 
 Para poder generar un modelo preciso y adecuado, es de vital importancia seleccionar, limpiar y transformar los datos en el caso de que sea necesario. 
 
@@ -254,9 +254,39 @@ Como resumen, en este apartado no se hará tratamiento de ningún valor extremo 
 
 # Análisis de los datos
 
+## Análisis descriptivo
+
+### summary con las 5 estadísticos más comunes
+### histogramas/supervivencia de todas las variables numéricas
+### tabla de frecuencias /supervivencia de todas las variables categóricas
+
 ## Selección de grupos
+
+### diferencia de edad en grupo superviviente y grupo no superviviente
+### diferencia en proporción de supervivencia por genero
+### diferencia proporción de supervivencia por clase
+### diferencia proporción de supervivencia por puerto
+
 ## Test de normalidad y heteroscedasticidad
+
+### test sobre edad
+### test sobre fare
+
 ## Pruebas estadísticas
+
+### diferencia de edad en grupo superviviente y grupo no superviviente
+### diferencia en proporción de supervivencia por genero
+### diferencia proporción de supervivencia por clase
+### diferencia proporción de supervivencia por puerto
+
+# regresión logistica
+
+## validación con conjunto de test
+
+## bondad de ajuste
+### R2
+### matriz de confusión
+### ROC
 
 # Conclusiones
 # Código y exportación de datos
