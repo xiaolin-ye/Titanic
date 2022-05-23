@@ -1,34 +1,304 @@
 ---
-title: "PRAC2"
-output:
-  html_document:
-    df_print: paged
----
-
+title: "PRAC2: Limpieza y análisis de datos"
 author: Xiaolin Ye, Javier Galan
 date: "Mayo 2022"
-output:  html_document
-     
+output:
+    pdf_document:
+      number_section: yes
+      toc: yes
+      toc_depth: 2
+    html_document:
+      number_sections: yes
+      toc: true
+      toc_depth: 2
+      theme: united
+      df_print: paged
+lang: es
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(eval=T, echo=T)
+
+library(ggplot2)
+library(reshape2)
+library(VIM)
+
 ```
 
-******
-# Recursos básicos
-******
+*****
+# Descripción del dataset (completado, a revisars)
 
-Material didáctico de:  Tipologia y Ciclo de Datosa
+El dataset elegidos proviene de Kaggle, describe en él la información de los pasajeros de Titanic (género, edad...), las condiciones de embargue (tipo de clase, cabina..) y si sobrevivió el accidente. 
+
+El principal objetivo para analizar estos datos es la predicción de la supervivencia de los pasajeros, para ello nos facilita un juego de datos de entrenamiento "train.csv" como la base para el aprendizaje supervisado y otro juego de "test.csv" que sirve para evaluar la precisión de la predicción.
+
+Esta tarea también forma parte de una competición que celebra Kaggle donde los participantes suben sus trabajos y compiten por ser la mejor implementación que resuelve la pregunta clave:
+
+¿Qué tipo de pasajero tiene mayor probabilidad de sobrevivir?
+
+##Lectura de los datos:
+
+Para crear nuestro modelo, primero leemos los datos de entrenamiento.
+```{r message=FALSE, warning=FALSE}
+titanic_train <-read.csv("train.csv",header=T,sep=",")
+```
+
+```{r message=FALSE, warning=FALSE}
+titanic_test <-read.csv("test.csv",header=T,sep=",")
+```
+
+Hacemos un breve análisis de los datos ya que nos interesa tener una idea general de los datos que disponemos. 
+## Exploración de la base de datos
+
+Primero calcularemos las dimensiones de nuestra base de datos y analizaremos qué tipos de atributos tenemos.
+
+Calculamos las dimensiones de la base de datos mediante la función dim(). Obtenemos que disponemos de 891 registros o pasajeros (filas) y 12 variables (columnas) para el juego de entrenamiento, 418 registros y 11 variables para el juego de validación.
+
+```{r}
+dim(titanic_train)
+```
+
+```{r}
+dim(titanic_test)
+```
+
+¿Cuáles son esas variables? 
+```{r}
+str(titanic_train)
+```
+
+Gracias a la función str() sabemos  si las varibales son categoricas o numéricas:
+
+ * *PassengerId*: int. variable cuantitativo.
+    
+    Numéro entero ordinal que identifica a cada uno de los pasajeros.
+ 
+ * *Survived*   : int. variable cualitativo.
+    
+    Código numérico que identifica el estado de supervivencia de los pasajeros tras el accidente
+    
+ * *Pclass*     : int. variable cuantitativo.
+ 
+    Clase del ticket que posee el pasajero, 1 = primera, 2 = segunda y 3 = tercera
+    
+ * *Name*       : chr. variable cualitativo.
+ 
+    Nombre del pasajero
+    
+ * *Sex*        : chr. variable cualitativo.
+    
+    Género del pasajero
+    
+ * *Age*        : num. variable cuantitativo.
+ 
+    Edad del pasajero
+    
+ * *SibSp*      : int. variable cuantitativo.
+ 
+    Numéro de hermanos/pareja a bordo
+    
+ * *Parch*      : int. variable cuantitativo.
+ 
+    Numéro de padres/hijos a bordo
+    
+ * *Ticket*     : chr. vairable cualitativo
+ 
+    Identificador del ticket
+    
+ * *Fare*       : num. variable cuantitativo.
+ 
+    Precio del ticket
+    
+ * *Cabin*      : chr. variable cualitativo.
+ 
+    Identificador de la cabina
+    
+ * *Embarked*   : chr. variable cualitativo.
+
+    Puerto de embargue. C = Cherbourg, Q = Queenstown, S = Southampton
+    
+*****
+
+# Limipeza de datos (completado, a revisar)
+
+Para poder generar un modelo preciso y adecuado, es de vital importancia seleccionar, limpiar y transformar los datos en el caso de que sea necesario. 
+
+Empezamos este apartado seleccionando aquellos atributos/registros que nos van a ser útiles a la hora de construir el modelo.
+
+## Selección de datos
+
+### Registros duplicados
+
+Comprobamos que no hay registros duplicados que eliminar
+```{r}
+sum(duplicated(titanic_train))
+```
+
+### correlación entre variables
+
+#### variables cuantitativas
+Para poder identificar qué variables cuantitativas podemos descartar, podemos calcular la correlación entre las variables. 
+
+Por un lado, podes identificar y descartar las variables que no contribuyen apenas a la variable objetivo, por otro lado podemos reconocer variables predictivos que están fuertemente relacionados y usar solo una de ellas.
+
+```{r}
+
+numeric_cor <- cor(titanic_train[,c('PassengerId','Survived','Pclass', 'Age', 'SibSp', 'Parch')],
+    titanic_train[,c('PassengerId','Survived','Pclass', 'Age', 'SibSp', 'Parch')], method = 'pearson',use = "pairwise.complete.obs")
+
+melted_cormat <- melt(numeric_cor)
+ggplot(data = melted_cormat, aes(x=Var1, y=Var2)) + 
+  geom_tile(aes(fill = value))+
+  geom_text(aes(label = round(value,1 ))) +
+  scale_fill_gradient(low = "white", high = "red") 
+```
+
+De aquí podemos observar que, a pesar de que PassengerId es un número, es meramente un identificador ordinal que no aporta información particular de los pasajeros y por lo tanto, afecta de forma escasa en todas las demás variables.
+
+Por otro lado, se observa algo de correlación entre las variables SibSp y Parch, que por nuestra intuición, sabemos que una persona con pareja es más probable tener hijos por ejemplo. No obstante, como no se relacionan igual a la variable target, no podemos descartar ninguna de ellas.
+
+#### variables cualitativas
+
+Sabemos que el nombre de una persona viene de fuentes variadas y suele condicionar en los sucesos cotidianos de una forma determinista, por lo que no la incluiremos en nuestro modelo. 
+
+De igual manera a _PassengerId_, _Ticket_, este identificador vienen condicionados por otros factores que no suele relacionarse con los individuos directamente (como por ejemplo la empresa comercializadora, el puerto de embargue, la fecha de compra...), también lo descartaremos.
+
+Puesto que no tenemos más suposiciones lógicas sobre las demás variables, las vamos a mantener para los siguientes pasos de procesado/análisis.
+
+```{r}
+
+titanic_train <- titanic_train[,c(2,3,5,6,7,8,10,11,12)]
+```
+
+
+## Valores nulos
+
+Es de gran interés saber si tenemos muchos valores nulos (campos vacíos) y la distribución de valores por variables. Es por ello recomendable empezar el análisis con una visión general de las variables. 
+
+Mostraremos para cada atributo la cantidad de valores perdidos mediante la función is.na.  
+
+```{r}
+colSums(is.na(titanic_train))
+```
+
+Aunque una práctica común para completar los valores numéricos perdidos es poner la media, en este caso al sospechar que puede afectar significativamente en el grado de supervivencia debemos de tratarlo con precaución ya que aumentar el valor de la tendencia central 177 veces en un juego de datos de 900 podemos crear una falsa conclusión. 
+
+Por lo que se ha considerado que en este caso es preferible imputar estos valores basando en una serie de factores como por ejemplo clase, género, número de hermanos/pareja, padres/hijos y el precio del ticket. 
+
+```{r}
+
+titanic_train = kNN(titanic_train, variable = "Age",
+         dist_var = c("Pclass","Sex", "SibSp", "Parch", "Fare"), imp_var = FALSE)
+
+colSums(is.na(titanic_train))
+```
+
+Por otro lado, también necesitamos encontrar los valores vacíos, podemos usar colSums para saber la suma en cada columna.
+
+```{r}
+
+colSums(titanic_train == "")/nrow(titanic_train)
+```
+
+Como se puede ver, la variable _Cabin_ tiene un porcentaje de 77% de valores vacíos, con un número tan alto de valores desconocidos no nos va a ser útil para construir el modelo. Es más, usar esta variable nos introducirá errores. Por lo que decidimos descartar esta variable dell dataset. 
+
+```{r}
+titanic_train <- titanic_train[-c(8)]
+```
+
+Por otro lado, el puerto de embargue contiene una cantidad reducida de campos desconocidos, le asignaremos la categoría de _U (Unkown)_.
+
+```{r}
+table(titanic_train$Embarked)
+```
+
+```{r}
+titanic_train[titanic_train == ""] <- "U"
+table(titanic_train$Embarked)
+```
+
+## Valores extremos
+
+### Valores numéricos
+
+Para los valores numéricos, lo más rápido para visualizar los outliers son los boxplots. 
+
+```{r}
+par(mfrow=c(2,2))
+age_box <- boxplot(titanic_train[,4], main = colnames(titanic_train[4]))
+sibSp_box <- boxplot(titanic_train[,5], main = colnames(titanic_train[5]))
+parch_box <- boxplot(titanic_train[,6], main = colnames(titanic_train[6]))
+fare_box <- boxplot(titanic_train[,7], main = colnames(titanic_train[7]))
+```
+
+A pesar de que podemos ver muchos puntos en las 4 gráficas, la gran mayoría de ellas están dentro de las posibilidades reales, con lo que se consideran valores anormales pero válidos para el estudio. 
+
+No obstante, los únicos datos con los que podemos tener alguna duda es el precio de ticket alrededor de 500, muy alejados de los otros valores del resto. 
+
+
+Para visualizar los outliers detectados, grafiamos un histograma para ver su distribución.
+```{r}
+hist_counts <- hist(fare_box$out)
+```
+
+A pesar de ser outliers, hay bastante cantidad de ellos, esto puede deberse que en un trayecto hay categorías muy diversas, con cantidades cada vez menores en clases crecientes y/o otros servicios que puede afectar al precio final.
+
+Si contamos la cantidad de estos tickes en cada bin, vemos que incluso en el rango de 500 hay más de 1 ticket vendido a ese precio, con lo que es poco probable que se trate de un error de escritura o recopilación de datos.
+
+```{r}
+hist_counts$counts
+```
+
+Como resumen, en este apartado no se hará tratamiento de ningún valor extremo ya que se pueden considerar válidos todos a pesar de presentar diferencia con la tendencia central de cada variable.
+
+
+# Análisis de los datos
+
+## Análisis descriptivo
+
+### summary con las 5 estadísticos más comunes
+### histogramas/supervivencia de todas las variables numéricas
+### tabla de frecuencias /supervivencia de todas las variables categóricas
+
+## Selección de grupos
+
+### diferencia de edad en grupo superviviente y grupo no superviviente
+### diferencia en proporción de supervivencia por genero
+### diferencia proporción de supervivencia por clase
+### diferencia proporción de supervivencia por puerto
+
+## Test de normalidad y heteroscedasticidad
+
+### test sobre edad
+### test sobre fare
+
+## Pruebas estadísticas
+
+### diferencia de edad en grupo superviviente y grupo no superviviente
+### diferencia en proporción de supervivencia por genero
+### diferencia proporción de supervivencia por clase
+### diferencia proporción de supervivencia por puerto
+
+# regresión logistica
+
+## validación con conjunto de test
+
+## bondad de ajuste
+### R2
+### matriz de confusión
+### ROC
+
+# Conclusiones
+# Código y exportación de datos
+# Recursos básicos
+
+Material didáctico de:  Tipologia y Ciclo de Datos
 
 Complementarios:
 
 * Los descritos para la anterior PEC.
 * Fichero :train.csv :Titanic: Machine Learning from Disaster (https://www.kaggle.com/c/titanic)
 
-******
-# Desarrollo práctica
-******
 
 
 **Objetivos:**
@@ -53,64 +323,7 @@ Complementarios:
   
 *7.     Código: Hay que adjuntar el código, preferiblemente en R, con el que se ha realizado la        limpieza, análisis y representación de los datos. Si lo preferís, también podéis trabajar     en Python.*
 
-## Análisis inicial
 
-#Lectura de los datos:
-
-```{r message=FALSE, warning=FALSE}
-datos_titanic <-read.csv("train.csv",header=T,sep=",")
-attach(datos_titanic)
-```
-
-
-
-Empezaremos haciendo un breve análisis de los datos ya que nos interesa tener una idea general de los datos que disponemos. 
-
-### Exploración de la base de datos
-
-Primero calcularemos las dimensiones de nuestra base de datos y analizaremos qué tipos de atributos tenemos.
-
-Para empezar, calculamos las dimensiones de la base de datos mediante la función dim(). Obtenemos que disponemos de 891 registros o pasajeros (filas) y 12 variables (columnas). 
-
-```{r}
-dim(datos_titanic)
-```
-
-¿Cuáles son esas variables? 
-```{r}
-str(datos_titanic)
-```
-
-
-
-Gracias a la función str() sabemos  si las varibales son categoricas o discretas:
-_______________
-
-
-### Descripcion del Daset: (*ampliar*)
-
- * PassengerId: int  
- * Survived   : int  
- * Pclass     : int   
- * Name       : chr  
- * Sex        : chr  
- * Age        : num  
- * SibSp      : int  
- * Parch      : int  
- * Ticket     : chr  
- * Fare       : num  
- * Cabin      : chr  
- * Embarked   : chr  
-
-
-
-
-Es de gran interés saber si tenemos muchos valores nulos (campos vacíos) y la distribución de valores por variables. Es por ello recomendable empezar el análisis con una visión general de las variables. Mostraremos para cada atributo la cantidad de valores perdidos mediante la función summary.  
-
-
-```{r}
-summary(datos_titanic)
-```
 
 
 
