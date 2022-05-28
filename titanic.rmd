@@ -26,7 +26,7 @@ library(VIM)
 ```
 
 *****
-# Descripción del dataset (completado, a revisars)
+# Descripción del dataset (completo)
 
 El dataset elegidos proviene de Kaggle, describe en él la información de los pasajeros de Titanic (género, edad...), las condiciones de embargue (tipo de clase, cabina..) y si sobrevivió el accidente. 
 
@@ -120,7 +120,7 @@ Gracias a la función str() sabemos  si las varibales son categoricas o numéric
     
 *****
 
-# Limipeza de datos (completado, a revisar)
+# Limipeza de datos (completo)
 
 Para poder generar un modelo preciso y adecuado, es de vital importancia seleccionar, limpiar y transformar los datos en el caso de que sea necesario. 
 
@@ -182,9 +182,6 @@ colSums(is.na(titanic_train))
 Aunque una práctica común para completar los valores numéricos perdidos es poner la media, en este caso al sospechar que puede afectar significativamente en el grado de supervivencia debemos de tratarlo con precaución ya que aumentar el valor de la tendencia central 177 veces en un juego de datos de 900 podemos crear una falsa conclusión. 
 
 Por lo que se ha considerado que en este caso es preferible imputar estos valores basando en una serie de factores como por ejemplo clase, género, número de hermanos/pareja, padres/hijos y el precio del ticket. 
-```{r}
-colSums(titanic_train=="")
-```
 
 ```{r}
 titanic_train = kNN(titanic_train, variable = "Age",
@@ -194,7 +191,9 @@ colSums(is.na(titanic_train))
 
 Por otro lado, también necesitamos encontrar los valores vacíos, podemos usar colSums para saber la suma en cada columna.
 
- 
+```{r}
+colSums(titanic_train=="")
+```
 
 Como se puede ver, la variable _Cabin_ tiene un porcentaje de 77% de valores vacíos, con un número tan alto de valores desconocidos no nos va a ser útil para construir el modelo. Es más, usar esta variable nos introducirá errores. Por lo que decidimos descartar esta variable dell dataset. 
 
@@ -250,19 +249,18 @@ Como resumen, en este apartado no se hará tratamiento de ningún valor extremo 
 
 # Análisis de los datos
 
-primero sacamos dimenmsion y factorizamos con un nueva variable para poder hacer comparaciones con el grupo superviiente
+primero sacamos dimenmsión y factorizamos con un nueva variable para poder hacer comparaciones con el grupo superviviente.
 
 
 ## Análisis descriptivo
 
-### summary con las 5 estadísticos más comunes
+### summary con las 5 estadísticos más comunes y transformación de las variables
 
 ```{r}
 summary(titanic_train)
 ```
-Ahora añadiremos un campo nuevo a los datos. Este campos contendrá el valor cualitativo de la Supervivencia con un método simple asignadno los valores de la varibale Survived si es 0 le asinamos "NO" y si es 1 le asignamos "SI".
 
- 
+Ahora añadiremos un campo nuevo a los datos. Este campos contendrá el valor cualitativo de la Supervivencia con un método simple asignadno los valores de la varibale Survived si es 0 le asinamos "NO" y si es 1 le asignamos "SI".
 
 ```{r}
 filas=dim(titanic_train)
@@ -276,82 +274,94 @@ Tambien crearemos un campo nuevo para la Clase del ticket, ya que aunque el data
 
 titanic_train["Clase"]<-  cut(titanic_train$Pclass, breaks = c(0,1,2,3), labels = c("primera", "segunda", "tercera"))
   
-
 ```
 
 
 ### histogramas/supervivencia de todas las variables numéricas
 
-
-
+#### Edad
 ```{r}
  
-ggplot(data = titanic_train[!(is.na(titanic_train[1:filas[1],]$Age)),],aes(x=Age,fill=Supervivencia))+geom_histogram(binwidth =3)+ggtitle("Relacion Supervivencia  en función de edad")
+ggplot(data = titanic_train, aes(x=Age,fill=Supervivencia))+
+  geom_histogram(binwidth =3)+
+  ggtitle("Relacion Supervivencia  en función de edad")
 
 ``` 
-
 
 Observamos como el parámetro position=“hijo” nos da la proporción acumulada de un atributo dentro de otro. Parece que los niños tuvieron más posibilidad de salvarse.
 
- 
+
+# ```{r}
+# ggplot(data = titanic_train, aes(x=Pclass, fill=Supervivencia))+
+#   geom_histogram(binwidth = 1)+
+#   ggtitle("Relacion Supervivencia en función de PClass: clase")
+# 
+# ``` 
+
+#### Precio del ticket
 ```{r}
-ggplot(data = titanic_train[!is.na(titanic_train[1:filas[1],]$Pclass),],aes(x=Pclass,fill=Supervivencia))+geom_histogram(binwidth = 3)+ggtitle("Relacion Supervivencia en función de Pclass")
-
- 
-
-
-``` 
-```{r}
-
-
- 
-ggplot(data = titanic_train[!is.na(titanic_train[1:filas[1],]$Fare),],aes(x=Fare,fill=Supervivencia))+geom_histogram(binwidth = 3)+ggtitle("Relacion Supervivencia en función de Fare:Precio Ticket")
-
- 
-
+ggplot(data = titanic_train, aes(x=Fare,fill=Supervivencia))+
+  geom_histogram(binwidth = 10)+
+  ggtitle("Relacion Supervivencia en función de Fare:Precio Ticket")
 
 ```
 
+Aunque a simple vista parece que los que poseen un ticket barato tiene menor probabilidad de sobrevivir, lo cierto es que hay muy pocas muestras con precios mucho más elevados. 
 
 
+#### Número de hermanos/pareja
 
 ```{r} 
-ggplot(data = titanic_train[1:filas[1],],aes(x=SibSp,fill=Supervivencia))+geom_bar()+ggtitle("Relacion Supervivencia en función de Numéro de hermanos/pareja a bordo")
+ggplot(data = titanic_train, aes(x=SibSp,fill=Supervivencia))+
+  geom_bar()+
+  ggtitle("Relacion Supervivencia en función de Numéro de hermanos/pareja a bordo")
 
 ``` 
 
+La mayoría de los viajeros a bordo no tenían ningún hermano/pareja acompañado, tampoco se ve de forma evidente ninguna relación con la probabilidad de supervivencia.
+
+
+#### Número de padres/hijos
 
 ```{r} 
-ggplot(data = titanic_train[1:filas[1],],aes(x=Parch,fill=Supervivencia))+geom_bar()+ggtitle("Relacion Supervivencia en función de  Numéro de padres/hijos a bord")
+ggplot(data = titanic_train, aes(x=Parch,fill=Supervivencia))+
+  geom_bar()+
+  ggtitle("Relacion Supervivencia en función de  Numéro de padres/hijos a bord")
 ``` 
+
+De la misma manera, la mayoría de los viajeros a bordo no tenían ningún pariente/hijo acompañado, tampoco se ve de forma evidente ninguna relación con la probabilidad de supervivencia.
+
 
 ### tabla de frecuencias /supervivencia de todas las variables categóricas
 
-Nos proponemos analizar las relaciones entre las diferentes variables del juego de datos para ver si se relacionan y como.
+Nos proponemos analizar las relaciones entre las diferentes variables del juego de datos para ver si se relacionan y cómo.
 
-Visualizamos la relación entre las variables “genero” y “supervivencia”:
+#### Género
+
+Visualizamos la relación entre las variables “género” y “supervivencia”:
 
 ```{r}
-filas=dim(titanic_train)
-ggplot(data=titanic_train[1:filas[1],],aes(x=Sex,fill=Supervivencia))+geom_bar()+ggtitle("Relacion Supervivencia por genero")
+
+ggplot(data=titanic_train, aes(x=Sex,fill=Supervivencia))+
+  geom_bar()+
+  ggtitle("Relacion Supervivencia por género")
 ```
-
-
 
 Otro punto de vista. Survived como función de Sexo:
 
 ```{r}
-ggplot(data=titanic_train[1:filas[1],],aes(x=Sex,fill=Supervivencia))+geom_bar(position="fill")+ggtitle("Relacion Supervivencia por genero")
+ggplot(data=titanic_train,aes(x=Sex,fill=Supervivencia))+
+  geom_bar(position="fill")+
+  ggtitle("Relacion Supervivencia por género")
 ```                                                                
 
+En la primera gráfica podemos observar fácilmente la cantidad de mujeres que viajaban respecto hombres y los que no sobrevivieron. En la segunda gráfica de forma porcentual observamos el sexo y los porcentajes de supervivencia en función de ser mujer/hombre. 
 
-En la primera gráfica podemos observar fácilmente la cantidad de mujeres que viajaban respecto hombres y observar los que no sobrevivieron. 
+En ambas gráficas confirmamos la suposición de que la probabilidad de supervivencia para mujeres es mayor que la de hombres.
 
-En la segunda gráfica de forma porcentual observamos el sexo y los porcentajes de supervivencia en función de ser mujer/hombre
-
-Podemos obtener la matriz de porcentajes de frecuencia
+Podemos obtener numéricamente la matriz de porcentajes de frecuencia:
 ```{r}
-t<-table(titanic_train[1:filas[1],]$Sex,titanic_train[1:filas[1],]$Supervivencia)
+t<-table(titanic_train$Sex,titanic_train$Supervivencia)
 for (i in 1:dim(t)[1]){
     t[i,]<-t[i,]/sum(t[i,])*100
 }
@@ -359,10 +369,15 @@ t
 ```
 Vemos que la posiblidiad de sobrevivir si eran mujeres es de un 74,20 % sin embargo solo del 18,89% para los hombres
 
+
+#### Clase
+
 Visualizamos la relación entre las variables “clase” y “supervivencia”:
 
 ```{r}
-ggplot(data=titanic_train[1:filas[1],],aes(x=Clase,fill=Supervivencia))+geom_bar(position="fill")+ggtitle("Relacion Supervivencia por clase")
+ggplot(data=titanic_train,aes(x=Clase,fill=Supervivencia))+
+  geom_bar(position="fill")+
+  ggtitle("Relacion Supervivencia por clase")
 ```                              
 
 Si obtenemos su matriz de porcentajes de frecuencia
@@ -379,10 +394,17 @@ Primera Clase --> 62,96%
 Segunda Clsae --> 47,28%
 Tercer Clase --> 24,23%
 
+Parece que los viajeros de primera clase tuvieron mayores probabilidades de sobrevivir que los de la segunda, y estos a su vez que los de la tercera.
+
+
+#### Puerto
+
 Visualizamos la relación entre las variables “Embarked” y “supervivencia”:
 
 ```{r}
-ggplot(data=titanic_train[1:filas[1],],aes(x=Embarked,fill=Supervivencia))+geom_bar(position="fill")+ggtitle("Relacion Supervivencia por puerto de embarque")
+ggplot(data=titanic_train,aes(x=Embarked,fill=Supervivencia))+
+  geom_bar(position="fill")+
+  ggtitle("Relacion Supervivencia por puerto de embarque")
 ```                              
 
 Si obtenemos su matriz de porcentajes de frecuencia
@@ -398,9 +420,13 @@ La probabilidad de sobrevivir dependiendo del puerto de embarque es :
 Puerto C --> 55,35%
 Puerto  Q --> 38,96%
 Puerto S --> 33,69 %
- 
+Puerto U --> 100% 
 
-C = Cherbourg, Q = Queenstown, S = Southampton
+C = Cherbourg, Q = Queenstown, S = Southampton, U = unkown
+
+Aunque en el puerto U la probabilidad de supervivencia es 100%, se ha de tener en cuenta que son los dos casos donde no se conocía el puerto de embarque, con lo que no es adecuado derivar conclusiones a partir de estas muestras.
+
+No obstante, sí se observa que los viajeros que embarcan en el puerto de Cherbourg tienen ligeramente mayores probabilidades de sobrevivir que los demás.
 
 
 ## Selección de grupos
@@ -728,7 +754,6 @@ Complementarios:
 *6.     Resolución  del  problema.  A  partir  de  los  resultados  obtenidos,  ¿cuáles  son  las   conclusiones? ¿Los resultados permiten responder al problema?*
   
 *7.     Código: Hay que adjuntar el código, preferiblemente en R, con el que se ha realizado la        limpieza, análisis y representación de los datos. Si lo preferís, también podéis trabajar     en Python.*
-
 
 
 
