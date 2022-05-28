@@ -3,26 +3,26 @@ title: "PRAC2: Limpieza y análisis de datos"
 author: Xiaolin Ye, Javier Galan
 date: "Mayo 2022"
 output:
-    pdf_document:
-      number_section: yes
-      toc: yes
-      toc_depth: 2
     html_document:
       number_sections: yes
       toc: true
       toc_depth: 2
       theme: united
       df_print: paged
+    pdf_document:
+      number_section: yes
+      toc: yes
+      toc_depth: 2
 lang: es
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(eval=T, echo=T)
-
 library(ggplot2)
 library(reshape2)
-library(VIM)
 
+install.packages('VIM', repos='http://cran.us.r-project.org')
+library(VIM)
 ```
 
 *****
@@ -41,6 +41,7 @@ Esta tarea también forma parte de una competición que celebra Kaggle donde los
 Para crear nuestro modelo, primero leemos los datos de entrenamiento.
 ```{r message=FALSE, warning=FALSE}
 titanic_train <-read.csv("train.csv",header=T,sep=",")
+
 ```
 
 ```{r message=FALSE, warning=FALSE}
@@ -142,10 +143,8 @@ Para poder identificar qué variables cuantitativas podemos descartar, podemos c
 Por un lado, podes identificar y descartar las variables que no contribuyen apenas a la variable objetivo, por otro lado podemos reconocer variables predictivos que están fuertemente relacionados y usar solo una de ellas.
 
 ```{r}
-
 numeric_cor <- cor(titanic_train[,c('PassengerId','Survived','Pclass', 'Age', 'SibSp', 'Parch')],
     titanic_train[,c('PassengerId','Survived','Pclass', 'Age', 'SibSp', 'Parch')], method = 'pearson',use = "pairwise.complete.obs")
-
 melted_cormat <- melt(numeric_cor)
 ggplot(data = melted_cormat, aes(x=Var1, y=Var2)) + 
   geom_tile(aes(fill = value))+
@@ -166,7 +165,6 @@ De igual manera a _PassengerId_, _Ticket_, este identificador vienen condicionad
 Puesto que no tenemos más suposiciones lógicas sobre las demás variables, las vamos a mantener para los siguientes pasos de procesado/análisis.
 
 ```{r}
-
 titanic_train <- titanic_train[,c(2,3,5,6,7,8,10,11,12)]
 ```
 
@@ -184,21 +182,19 @@ colSums(is.na(titanic_train))
 Aunque una práctica común para completar los valores numéricos perdidos es poner la media, en este caso al sospechar que puede afectar significativamente en el grado de supervivencia debemos de tratarlo con precaución ya que aumentar el valor de la tendencia central 177 veces en un juego de datos de 900 podemos crear una falsa conclusión. 
 
 Por lo que se ha considerado que en este caso es preferible imputar estos valores basando en una serie de factores como por ejemplo clase, género, número de hermanos/pareja, padres/hijos y el precio del ticket. 
+```{r}
+colSums(titanic_train=="")
+```
 
 ```{r}
-
 titanic_train = kNN(titanic_train, variable = "Age",
          dist_var = c("Pclass","Sex", "SibSp", "Parch", "Fare"), imp_var = FALSE)
-
 colSums(is.na(titanic_train))
 ```
 
 Por otro lado, también necesitamos encontrar los valores vacíos, podemos usar colSums para saber la suma en cada columna.
 
-```{r}
-
-colSums(titanic_train == "")/nrow(titanic_train)
-```
+ 
 
 Como se puede ver, la variable _Cabin_ tiene un porcentaje de 77% de valores vacíos, con un número tan alto de valores desconocidos no nos va a ser útil para construir el modelo. Es más, usar esta variable nos introducirá errores. Por lo que decidimos descartar esta variable dell dataset. 
 
@@ -254,38 +250,448 @@ Como resumen, en este apartado no se hará tratamiento de ningún valor extremo 
 
 # Análisis de los datos
 
+primero sacamos dimenmsion y factorizamos con un nueva variable para poder hacer comparaciones con el grupo superviiente
+
+
 ## Análisis descriptivo
 
 ### summary con las 5 estadísticos más comunes
+
+```{r}
+summary(titanic_train)
+```
+Ahora añadiremos un campo nuevo a los datos. Este campos contendrá el valor cualitativo de la Supervivencia con un método simple asignadno los valores de la varibale Survived si es 0 le asinamos "NO" y si es 1 le asignamos "SI".
+
+ 
+
+```{r}
+filas=dim(titanic_train)
+titanic_train["Supervivencia"]<-  as.factor(titanic_train$Survived)
+titanic_train["Supervivencia"]<- ifelse(titanic_train$Supervivencia == '0' ,'NO','SI')
+``` 
+
+Tambien crearemos un campo nuevo para la Clase del ticket, ya que aunque el datast sea numerico, para nuestors estudios nos vendra bien categorizarlo  
+
+```{r}
+
+titanic_train["Clase"]<-  cut(titanic_train$Pclass, breaks = c(0,1,2,3), labels = c("primera", "segunda", "tercera"))
+  
+
+```
+
+
 ### histogramas/supervivencia de todas las variables numéricas
+
+
+
+```{r}
+ 
+ggplot(data = titanic_train[!(is.na(titanic_train[1:filas[1],]$Age)),],aes(x=Age,fill=Supervivencia))+geom_histogram(binwidth =3)+ggtitle("Relacion Supervivencia  en función de edad")
+
+``` 
+
+
+Observamos como el parámetro position=“hijo” nos da la proporción acumulada de un atributo dentro de otro. Parece que los niños tuvieron más posibilidad de salvarse.
+
+ 
+```{r}
+ggplot(data = titanic_train[!is.na(titanic_train[1:filas[1],]$Pclass),],aes(x=Pclass,fill=Supervivencia))+geom_histogram(binwidth = 3)+ggtitle("Relacion Supervivencia en función de Pclass")
+
+ 
+
+
+``` 
+```{r}
+
+
+ 
+ggplot(data = titanic_train[!is.na(titanic_train[1:filas[1],]$Fare),],aes(x=Fare,fill=Supervivencia))+geom_histogram(binwidth = 3)+ggtitle("Relacion Supervivencia en función de Fare:Precio Ticket")
+
+ 
+
+
+```
+
+
+
+
+```{r} 
+ggplot(data = titanic_train[1:filas[1],],aes(x=SibSp,fill=Supervivencia))+geom_bar()+ggtitle("Relacion Supervivencia en función de Numéro de hermanos/pareja a bordo")
+
+``` 
+
+
+```{r} 
+ggplot(data = titanic_train[1:filas[1],],aes(x=Parch,fill=Supervivencia))+geom_bar()+ggtitle("Relacion Supervivencia en función de  Numéro de padres/hijos a bord")
+``` 
+
 ### tabla de frecuencias /supervivencia de todas las variables categóricas
+
+Nos proponemos analizar las relaciones entre las diferentes variables del juego de datos para ver si se relacionan y como.
+
+Visualizamos la relación entre las variables “genero” y “supervivencia”:
+
+```{r}
+filas=dim(titanic_train)
+ggplot(data=titanic_train[1:filas[1],],aes(x=Sex,fill=Supervivencia))+geom_bar()+ggtitle("Relacion Supervivencia por genero")
+```
+
+
+
+Otro punto de vista. Survived como función de Sexo:
+
+```{r}
+ggplot(data=titanic_train[1:filas[1],],aes(x=Sex,fill=Supervivencia))+geom_bar(position="fill")+ggtitle("Relacion Supervivencia por genero")
+```                                                                
+
+
+En la primera gráfica podemos observar fácilmente la cantidad de mujeres que viajaban respecto hombres y observar los que no sobrevivieron. 
+
+En la segunda gráfica de forma porcentual observamos el sexo y los porcentajes de supervivencia en función de ser mujer/hombre
+
+Podemos obtener la matriz de porcentajes de frecuencia
+```{r}
+t<-table(titanic_train[1:filas[1],]$Sex,titanic_train[1:filas[1],]$Supervivencia)
+for (i in 1:dim(t)[1]){
+    t[i,]<-t[i,]/sum(t[i,])*100
+}
+t
+```
+Vemos que la posiblidiad de sobrevivir si eran mujeres es de un 74,20 % sin embargo solo del 18,89% para los hombres
+
+Visualizamos la relación entre las variables “clase” y “supervivencia”:
+
+```{r}
+ggplot(data=titanic_train[1:filas[1],],aes(x=Clase,fill=Supervivencia))+geom_bar(position="fill")+ggtitle("Relacion Supervivencia por clase")
+```                              
+
+Si obtenemos su matriz de porcentajes de frecuencia
+```{r}
+t<-table(titanic_train[1:filas[1],]$Clase,titanic_train[1:filas[1],]$Supervivencia)
+for (i in 1:dim(t)[1]){
+    t[i,]<-t[i,]/sum(t[i,])*100
+}
+t
+```
+La probabilidadde sobevivir dependiendo de la clase es:
+
+Primera Clase --> 62,96%
+Segunda Clsae --> 47,28%
+Tercer Clase --> 24,23%
+
+Visualizamos la relación entre las variables “Embarked” y “supervivencia”:
+
+```{r}
+ggplot(data=titanic_train[1:filas[1],],aes(x=Embarked,fill=Supervivencia))+geom_bar(position="fill")+ggtitle("Relacion Supervivencia por puerto de embarque")
+```                              
+
+Si obtenemos su matriz de porcentajes de frecuencia
+```{r}
+t<-table(titanic_train[1:filas[1],]$Embarked,titanic_train[1:filas[1],]$Supervivencia)
+for (i in 1:dim(t)[1]){
+    t[i,]<-t[i,]/sum(t[i,])*100
+}
+t
+```
+La probabilidad de sobrevivir dependiendo del puerto de embarque es :
+
+Puerto C --> 55,35%
+Puerto  Q --> 38,96%
+Puerto S --> 33,69 %
+ 
+
+C = Cherbourg, Q = Queenstown, S = Southampton
+
 
 ## Selección de grupos
 
+A continuación, se seleccionan los grupos dentro de nuestro conjunto de datos que pueden
+resultar interesantes para analizar y/o comparar. 
+
+
+Agrupacion por superviviente o no
+```{r}
+ 
+titanic_train.superviviente <- titanic_train[titanic_train$Supervivencia=="SI",]
+titanic_train.naufrago<- titanic_train[titanic_train$Supervivencia=="NO",]
+``` 
+
+Agrupacion por Sexo
+```{r}
+ 
+titanic_train.Mujer<- titanic_train[titanic_train$Sex=="female",]
+titanic_train.Hombre<- titanic_train[titanic_train$Sex=="male",]
+``` 
+
 ### diferencia de edad en grupo superviviente y grupo no superviviente
+
+
+Veamos  dos  gráficos que nos comparan los atributos Age y Survived. Observamos como el parámetro position=“fill” nos da la proporción acumulada de un atributo dentro de otro
+
+
+
+```{r}
+ggplot(data = titanic_train[!(is.na(titanic_train[1:filas[1],]$Age)),],aes(x=Age,fill=Supervivencia))+geom_histogram(binwidth =3)+ggtitle("RElacion Supervivencia  en función de edad")
+``` 
+ 
+```{r}
+ggplot(data = titanic_train[!(is.na(titanic_train[1:filas[1],]$Age)),],aes(x=Age,fill=Supervivencia))+geom_histogram(binwidth =3, position="fill")+ggtitle("RElacion Supervivencia  en función de edad")
+``` 
+
 ### diferencia en proporción de supervivencia por genero
+
+Para estudiar el intervalo de confianza para la diferencia de proporciones en dos poblaciones independientes utilizamos la funcion de r propt.test
+
+ comparamos los grupos supervivientes masculinos y femeninos , con el grupo hombre y mujeres
+
+```{r}
+
+prop.test (x = c
+           (dim(titanic_train.superviviente[titanic_train.superviviente$Sex=="male",][1]), dim(titanic_train.superviviente[titanic_train.superviviente$Sex=="female",][1])) , n=c(dim(titanic_train.Hombre[1]),dim(titanic_train.Mujer[1])), alternative="two.side", conf.level=0.95 , correct=FALSE)
+
+```
+
+Como se observa en la ultima linea del programa, la proporción de supervivientes en los hombre es del 18,89% y de las mujeres un 74,2%
+Mismos resultados que en el apartado donde calculamos la matriz de porcentaje de frecuencia
+
 ### diferencia proporción de supervivencia por clase
+
+Podemos utilizar otros métodos para obtener la proporcion como una matriz de porcentajes de frecuencia
+
+```{r}
+t<-table(titanic_train[1:filas[1],]$Pclass,titanic_train[1:filas[1],]$Supervivencia)
+for (i in 1:dim(t)[1]){
+    t[i,]<-t[i,]/sum(t[i,])*100
+}
+t
+```
+podemos ver que las probablidad de sobrevivir es;
+siendo de clase 1 : 62.96%
+Siendo de clase 2 : 47,28%
+Siendo de clase 3 : 24,23%
+
+ 
+```{r}
+ggplot(data=titanic_train[1:filas[1],],aes(x=Pclass,fill=Supervivencia))+geom_bar(position="fill")+ylab("Frequencia")+ggtitle("Survived como clase")
+
+```
+                                                    
+                         
+
+
 ### diferencia proporción de supervivencia por puerto
+ 
+```{r}
+t<-table(titanic_train[1:filas[1],]$Embarked,titanic_train[1:filas[1],]$Supervivencia)
+for (i in 1:dim(t)[1]){
+    t[i,]<-t[i,]/sum(t[i,])*100
+}
+t
+```
+podemos ver que las probablidad de sobrevivir dependuebdi del puerto es;
+Partiendo de C : 55,35%
+Partiendo de Q : 38,96%
+Partiendo de S : 33,69%
+C = Cherbourg, Q = Queenstown, S = Southampton
+
+
+
+```{r}
+ggplot(data=titanic_train[1:filas[1],],aes(x=Embarked,fill=Supervivencia))+geom_bar(position="fill")+ylab("Frequencia")+ggtitle("Survived como función de Embarked")
+
+```
+
 
 ## Test de normalidad y heteroscedasticidad
 
-### test sobre edad
-### test sobre fare
+Para la comprobación de que los valores que toman nuestras variables cuantitativas provienen
+de una población distribuida normalmente, utilizaremos la prueba de normalidad de el test de Shapiro Wilk en cada variables numérica.
+
+
+```{r}
+
+shapiro.test(titanic_train$Age)
+
+```
+
+
+
+
+```{r}
+
+shapiro.test(titanic_train$Pclass)
+
+```
+```{r}
+
+shapiro.test(titanic_train$SibSp)
+
+```
+```{r}
+
+shapiro.test(titanic_train$Parch)
+
+```
+```{r}
+
+shapiro.test(titanic_train$Fare)
+
+```
+El test nos indica que ninguna variable esta normalizada, ya que el p-valor es inferior al coeﬁciente 0.05, por lo que se puede rechazar la hipotesis nula y entender que no es normal.
+Que no sea normal no quiere decir que no pueda ser normalizable, ya que segun el teorema del limite central
+al tener mas de 30 elementos en las observaciones podemos aproximarla como una distribución normal de media 0 y desviación estandard 1.
+
+*Seguidamente, pasamos a estudiar la homogeneidad de varianzas mediante la aplicación un test de Fligner-Killeen* 
+
+En este caso, estudiaremos esta homogeneidad en cuanto los grupos conformados por los supervivientes y el sexo. En el siguiente test, la hipótesis nula consiste en que ambas varianzas son iguales.
+ 
+```{r}
+
+fligner.test(Survived ~ Sex , data =titanic_train)
+
+```
+Puesto que obtenemos un p-valor menor a 0,05, aceptamos la hipótesis de que las varianzas de ambas muestras NO son homogéneas.
+
 
 ## Pruebas estadísticas
 
-### diferencia de edad en grupo superviviente y grupo no superviviente
-### diferencia en proporción de supervivencia por genero
-### diferencia proporción de supervivencia por clase
-### diferencia proporción de supervivencia por puerto
+Vamos a proceder a realizar un analisis de correlación entre la variables cuantitivas para ver cuales influyen mas en la supervivencia.
+ 
+
+Los resultados anteriores muestran los datos de forma descriptiva, podemos añadir algún test estadístico para validar el grado de significancia de la relación. La librería "DescTools" nos permite instalarlo fácilmente.
+
+
+```{r}
+if(!require(DescTools)){
+    install.packages('DescTools', repos='http://cran.us.r-project.org')
+    library(DescTools)
+}
+```
+
+### diferencia por edad,sexo, puerto embarque y clase en grupo superviviente y grupo no superviviente
+```{r}
+tabla_SST <-table(titanic_train$Sex, titanic_train$Supervivencia)
+Phi(tabla_SST) 
+CramerV(tabla_SST) 
+```
+
+```{r}
+
+tabla_SAT <- table(titanic_train$Age, titanic_train$Supervivencia)
+Phi(tabla_SAT) 
+CramerV(tabla_SAT) 
+```
+
+```{r}
+tabla_SCT <- table(titanic_train$Clase, titanic_train$Supervivencia)
+Phi(tabla_SCT) 
+CramerV(tabla_SCT) 
+```
+
+
+```{r}
+tabla_SPT <- table(titanic_train$Embarked, titanic_train$Supervivencia)
+Phi(tabla_SPT) 
+CramerV(tabla_SPT) 
+```
+
+Valores de la V de Cramér  (https://en.wikipedia.org/wiki/Cramér%27s_V) y Phi (https://en.wikipedia.org/wiki/Phi_coefficient) entre 0.1 y 0.3 nos indican que la asociación estadística es baja, y entre 0.3 y 0.5 se puede considerar una asociación media. 
+
+Finalmente, los valores fueran superiores a 0.5,como en variable Sex , la asociación estadística entre las variables sería alta.
+Como se puede apreciar, los valores de Phi y V coinciden. Esto ocurre en el contexto de analizar tablas de contingencia 2x2.
+
+Una alternativa interesante a las barras de diagramas, es el plot de las tablas de contingencia. Obtenemos la misma información pero para algunos receptores puede resultar más visual.  
+```{r}
+par(mfrow=c(2,2))
+plot(tabla_SCT, col = c("black","#008000"), main = "SURVIVED vs. CLASE")
+plot(tabla_SPT, col = c("black","#008000"), main = "SURVIVED vs. EMBARKED")
+plot(tabla_SAT, col = c("black","#008000"), main = "SURVIVED vs. AGE")
+plot(tabla_SST, col = c("black","#008000"), main = "SURVIVED vs. SEX")
+```
+
+
+
+ 
+ 
+
+ 
+
+ 
+ 
+
+  
 
 # regresión logistica
+## R2
+Tal y como hemos visto en el trabajo con los datos nos resulta de gran interes poder predecir si un pasajero sobrevivió o no al hundimiento del Titanic
+
+De hecho existe una competicion en marcha en la plataforma Kaggle para "predecir" o clasificar este dataset.
+
+Para obtener un modelo de regresión  considerablemente eﬁciente, lo que haremos obtener varios modelos de regresión utilizando las variables que estén más correladas respecto a la superviiencia  Así, de entre todos los modelos que tengamos, escogeremos el mejor utilizando como criterio aquel que presente un mayor coeﬁciente de determinación (R2)
+
+
+
+
+```{r}
+
+head(titanic_train)
+
+
+# Variable a predecir, si se salvo el pasajero
+Salvado = titanic_train$Survived
+# Regresores   con mayor coeficiente  de correlación con respecto a la superviviencia
+
+Genero =titanic_train$Sex
+TicketClase = titanic_train$Pclass
+Edad = titanic_train$Age
+PuertoE= titanic_train$Embarked
+ 
+
+
+# Ajuste de un modelo lineal por mínimos cuadrados.
+modelo1<- lm(Salvado ~ Genero, data = titanic_train)
+modelo2<- lm(Salvado ~ Genero+TicketClase, data = titanic_train)
+modelo3 <-lm(Salvado ~ Genero+TicketClase+Edad, data = titanic_train) 
+modelo4 <-lm(Salvado ~ Genero+PuertoE+Edad, data = titanic_train) 
+modelo5 <-lm(Salvado ~ Genero+PuertoE+Edad+TicketClase, data = titanic_train) 
+ 
+
+
+tabla.coeficientes <- matrix(c(1, summary(modelo1)$r.squared,
+2, summary(modelo2)$r.squared,
+3, summary(modelo3)$r.squared,
+4, summary(modelo4)$r.squared,
+5, summary(modelo5)$r.squared),
+ncol =2,byrow =TRUE)
+colnames(tabla.coeficientes) <- c("Modelo","R^2")
+tabla.coeficientes
+
+```
+En este caso vemos que el 5 modelo es el más conveniente dado que tiene un mayor
+coeﬁciente de determinación. Ahora, empleando este modelo, podemos proceder a realizar
+predicciones de precios de vehículos como la siguiente:
+
+```{r}
+newdata <- data.frame(
+Genero = "female",
+PuertoE = "S",
+Edad = 38,
+TicketClase =1)
+
+```
+Prediccion de si Sobrbevive o no
+```{r}
+predict(modelo5, newdata)
+```
+Al 87% podemos decir que sorevive
+
 
 ## validación con conjunto de test
 
 ## bondad de ajuste
-### R2
+
 ### matriz de confusión
+ 
 ### ROC
 
 # Conclusiones
