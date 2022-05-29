@@ -254,7 +254,7 @@ primero sacamos dimenmsión y factorizamos con un nueva variable para poder hace
 
 ## Análisis descriptivo
 
-### summary con las 5 estadísticos más comunes y transformación de las variables
+### summary con las 5 estadísticos más comunes
 
 ```{r}
 summary(titanic_train)
@@ -263,7 +263,6 @@ summary(titanic_train)
 Ahora añadiremos un campo nuevo a los datos. Este campos contendrá el valor cualitativo de la Supervivencia con un método simple asignadno los valores de la varibale Survived si es 0 le asinamos "NO" y si es 1 le asignamos "SI".
 
 ```{r}
-filas=dim(titanic_train)
 titanic_train["Supervivencia"]<-  as.factor(titanic_train$Survived)
 titanic_train["Supervivencia"]<- ifelse(titanic_train$Supervivencia == '0' ,'NO','SI')
 ``` 
@@ -382,7 +381,7 @@ ggplot(data=titanic_train,aes(x=Clase,fill=Supervivencia))+
 
 Si obtenemos su matriz de porcentajes de frecuencia
 ```{r}
-t<-table(titanic_train[1:filas[1],]$Clase,titanic_train[1:filas[1],]$Supervivencia)
+t<-table(titanic_train$Clase,titanic_train$Supervivencia)
 for (i in 1:dim(t)[1]){
     t[i,]<-t[i,]/sum(t[i,])*100
 }
@@ -409,7 +408,7 @@ ggplot(data=titanic_train,aes(x=Embarked,fill=Supervivencia))+
 
 Si obtenemos su matriz de porcentajes de frecuencia
 ```{r}
-t<-table(titanic_train[1:filas[1],]$Embarked,titanic_train[1:filas[1],]$Supervivencia)
+t<-table(titanic_train$Embarked,titanic_train$Supervivencia)
 for (i in 1:dim(t)[1]){
     t[i,]<-t[i,]/sum(t[i,])*100
 }
@@ -431,101 +430,17 @@ No obstante, sí se observa que los viajeros que embarcan en el puerto de Cherbo
 
 ## Selección de grupos
 
+Despúes de ver los análisis preliminares, vemos que las variables que influyen en la probabilidad de supervivencia son la edad, la clase, el género y el puerto. Por lo que vamos a conducir más pruebas estadísticas sobre ellas.
+
+En concreto, nos proponemos a comparar los siguientes aspectos entre diferentes grupos:
+
+- La diferencia de edad en el grupo superviviente y y el no superviviente
+- La diferenica de la proporción de hombres y mujeres supervivientes
+- La diferencia de la proporción de supervivientes en cada clase
+- La diferencia de la proporción de supervivientes dependiendo del puerto
+
 A continuación, se seleccionan los grupos dentro de nuestro conjunto de datos que pueden
 resultar interesantes para analizar y/o comparar. 
-
-
-Agrupacion por superviviente o no
-```{r}
- 
-titanic_train.superviviente <- titanic_train[titanic_train$Supervivencia=="SI",]
-titanic_train.naufrago<- titanic_train[titanic_train$Supervivencia=="NO",]
-``` 
-
-Agrupacion por Sexo
-```{r}
- 
-titanic_train.Mujer<- titanic_train[titanic_train$Sex=="female",]
-titanic_train.Hombre<- titanic_train[titanic_train$Sex=="male",]
-``` 
-
-### diferencia de edad en grupo superviviente y grupo no superviviente
-
-
-Veamos  dos  gráficos que nos comparan los atributos Age y Survived. Observamos como el parámetro position=“fill” nos da la proporción acumulada de un atributo dentro de otro
-
-
-
-```{r}
-ggplot(data = titanic_train[!(is.na(titanic_train[1:filas[1],]$Age)),],aes(x=Age,fill=Supervivencia))+geom_histogram(binwidth =3)+ggtitle("RElacion Supervivencia  en función de edad")
-``` 
- 
-```{r}
-ggplot(data = titanic_train[!(is.na(titanic_train[1:filas[1],]$Age)),],aes(x=Age,fill=Supervivencia))+geom_histogram(binwidth =3, position="fill")+ggtitle("RElacion Supervivencia  en función de edad")
-``` 
-
-### diferencia en proporción de supervivencia por genero
-
-Para estudiar el intervalo de confianza para la diferencia de proporciones en dos poblaciones independientes utilizamos la funcion de r propt.test
-
- comparamos los grupos supervivientes masculinos y femeninos , con el grupo hombre y mujeres
-
-```{r}
-
-prop.test (x = c
-           (dim(titanic_train.superviviente[titanic_train.superviviente$Sex=="male",][1]), dim(titanic_train.superviviente[titanic_train.superviviente$Sex=="female",][1])) , n=c(dim(titanic_train.Hombre[1]),dim(titanic_train.Mujer[1])), alternative="two.side", conf.level=0.95 , correct=FALSE)
-
-```
-
-Como se observa en la ultima linea del programa, la proporción de supervivientes en los hombre es del 18,89% y de las mujeres un 74,2%
-Mismos resultados que en el apartado donde calculamos la matriz de porcentaje de frecuencia
-
-### diferencia proporción de supervivencia por clase
-
-Podemos utilizar otros métodos para obtener la proporcion como una matriz de porcentajes de frecuencia
-
-```{r}
-t<-table(titanic_train[1:filas[1],]$Pclass,titanic_train[1:filas[1],]$Supervivencia)
-for (i in 1:dim(t)[1]){
-    t[i,]<-t[i,]/sum(t[i,])*100
-}
-t
-```
-podemos ver que las probablidad de sobrevivir es;
-siendo de clase 1 : 62.96%
-Siendo de clase 2 : 47,28%
-Siendo de clase 3 : 24,23%
-
- 
-```{r}
-ggplot(data=titanic_train[1:filas[1],],aes(x=Pclass,fill=Supervivencia))+geom_bar(position="fill")+ylab("Frequencia")+ggtitle("Survived como clase")
-
-```
-                                                    
-                         
-
-
-### diferencia proporción de supervivencia por puerto
- 
-```{r}
-t<-table(titanic_train[1:filas[1],]$Embarked,titanic_train[1:filas[1],]$Supervivencia)
-for (i in 1:dim(t)[1]){
-    t[i,]<-t[i,]/sum(t[i,])*100
-}
-t
-```
-podemos ver que las probablidad de sobrevivir dependuebdi del puerto es;
-Partiendo de C : 55,35%
-Partiendo de Q : 38,96%
-Partiendo de S : 33,69%
-C = Cherbourg, Q = Queenstown, S = Southampton
-
-
-
-```{r}
-ggplot(data=titanic_train[1:filas[1],],aes(x=Embarked,fill=Supervivencia))+geom_bar(position="fill")+ylab("Frequencia")+ggtitle("Survived como función de Embarked")
-
-```
 
 
 ## Test de normalidad y heteroscedasticidad
@@ -533,39 +448,37 @@ ggplot(data=titanic_train[1:filas[1],],aes(x=Embarked,fill=Supervivencia))+geom_
 Para la comprobación de que los valores que toman nuestras variables cuantitativas provienen
 de una población distribuida normalmente, utilizaremos la prueba de normalidad de el test de Shapiro Wilk en cada variables numérica.
 
-
 ```{r}
-
 shapiro.test(titanic_train$Age)
-
 ```
 
-
-
-
 ```{r}
-
 shapiro.test(titanic_train$Pclass)
-
 ```
-```{r}
 
+```{r}
 shapiro.test(titanic_train$SibSp)
-
 ```
-```{r}
 
+```{r}
 shapiro.test(titanic_train$Parch)
-
 ```
+
 ```{r}
-
 shapiro.test(titanic_train$Fare)
+```
+
+De una forma más visual podemos hacer plot QQ por ejemplo sobre la variable cuantitativa que más nos interesa.
+```{r}
+qqnorm(titanic_train$Age)
+qqline(titanic_train$Age)
 
 ```
+
 El test nos indica que ninguna variable esta normalizada, ya que el p-valor es inferior al coeﬁciente 0.05, por lo que se puede rechazar la hipotesis nula y entender que no es normal.
 Que no sea normal no quiere decir que no pueda ser normalizable, ya que segun el teorema del limite central
 al tener mas de 30 elementos en las observaciones podemos aproximarla como una distribución normal de media 0 y desviación estandard 1.
+
 
 *Seguidamente, pasamos a estudiar la homogeneidad de varianzas mediante la aplicación un test de Fligner-Killeen* 
 
@@ -577,6 +490,17 @@ fligner.test(Survived ~ Sex , data =titanic_train)
 
 ```
 Puesto que obtenemos un p-valor menor a 0,05, aceptamos la hipótesis de que las varianzas de ambas muestras NO son homogéneas.
+
+
+De una manera smilar, estudiamos la homoscedaticidad de la edad en los dos grupos supervivencia
+
+```{r}
+
+fligner.test(Age ~ Survived , data =titanic_train)
+
+```
+
+Dado que p-value es superior a nivel de significacia, no podemos rechazar la hipótesis nula de homogeneidad y asumimos que las varianzas de edad entre el grupo superviviente y no superviviente son iguales.
 
 
 ## Pruebas estadísticas
@@ -594,7 +518,8 @@ if(!require(DescTools)){
 }
 ```
 
-### diferencia por edad,sexo, puerto embarque y clase en grupo superviviente y grupo no superviviente
+### Tests de correlación
+
 ```{r}
 tabla_SST <-table(titanic_train$Sex, titanic_train$Supervivencia)
 Phi(tabla_SST) 
@@ -635,17 +560,71 @@ plot(tabla_SAT, col = c("black","#008000"), main = "SURVIVED vs. AGE")
 plot(tabla_SST, col = c("black","#008000"), main = "SURVIVED vs. SEX")
 ```
 
+En los siguientes apartados, haremos los contrastes de hipótesis para seguir comparandos los grupos.
+
+### diferencia en proporción de supervivencia por genero
+
+En este caso, queremos comparar las medias de las muestras de los dos grupos, por lo que estamos ante un contraste de hipótesis bilateral de dos muestras independientes sobre la media. 
+
+Sabemos que la distribución de la edad no es normal, pero puede ser aproximada a ella dado que tenemos una cantidad de muestra superior a lo establecido por el TLC. Además, hemos visto que podemos asumir las varianzas de los dos grupos son iguales. 
+
+Las hipótesis que planteamos serían:
+
+H0: La media de edad para el grupo superviviente es igual que el grupo no superviviente. x1 = x2
+H1: La media de edad para el grupo superviviente es distinto al de grupo no superviviente. x1 != x2
+
+Usamos el test de Student.
+
+```{r}
+
+x1 = titanic_train$Age[titanic_train$Survived == 0]
+x2 = titanic_train$Age[titanic_train$Survived == 1]
+
+t.test(x1, x2, alternative = "two.sided",  var.equal=FALSE)
+
+```
+
+Dado de p-value es menor que 0.05, rechazamos la hipótesis nula, no son iguales la media de edad en estos grupos. 
+Si observamos la media de los dos grupos podemos ver que en el grupo superviviente la edad es ligeramente menor.
 
 
- 
- 
+### diferencia en proporción de supervivencia por género
 
- 
+Para estudiar el intervalo de confianza para la diferencia de proporciones en dos poblaciones independientes utilizamos la funcion de r propt.test
 
- 
- 
+comparamos los grupos supervivientes masculinos y femeninos , con el grupo hombre y mujeres
 
-  
+
+```{r}
+titanic_train.superviviente <- titanic_train[titanic_train$Supervivencia=="SI",]
+titanic_train.naufrago<- titanic_train[titanic_train$Supervivencia=="NO",]
+ 
+titanic_train.Mujer<- titanic_train[titanic_train$Sex=="female",]
+titanic_train.Hombre<- titanic_train[titanic_train$Sex=="male",]
+``` 
+
+```{r}
+
+prop.test (x = c
+           (dim(titanic_train.superviviente[titanic_train.superviviente$Sex=="male",][1]), dim(titanic_train.superviviente[titanic_train.superviviente$Sex=="female",][1])) , n=c(dim(titanic_train.Hombre[1]),dim(titanic_train.Mujer[1])), alternative="two.side", conf.level=0.95 , correct=FALSE)
+
+```
+
+Como se observa en la íltima línea del programa, la proporción de supervivientes en los hombre es del 18,89% y de las mujeres un 74,2%
+Mismos resultados que en el apartado donde calculamos la matriz de porcentaje de frecuencia
+
+
+### Diferencia de la proporción de supervivientes en cada clase
+
+
+
+
+
+### Diferencia de la proporción de supervivientes dependiendo del puerto
+
+
+
+
 
 # regresión logistica
 ## R2
