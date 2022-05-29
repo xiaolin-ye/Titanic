@@ -21,8 +21,12 @@ knitr::opts_chunk$set(eval=T, echo=T)
 library(ggplot2)
 library(reshape2)
 
-install.packages('VIM', repos='http://cran.us.r-project.org')
-library(VIM)
+
+if(!require(VIM)){
+    install.packages('VIM', repos='http://cran.us.r-project.org')
+    library(VIM)
+}
+
 ```
 
 *****
@@ -247,7 +251,7 @@ hist_counts$counts
 Como resumen, en este apartado no se hará tratamiento de ningún valor extremo ya que se pueden considerar válidos todos a pesar de presentar diferencia con la tendencia central de cada variable.
 
 
-# Análisis de los datos
+# Análisis de los datos (completo)
 
 primero sacamos dimenmsión y factorizamos con un nueva variable para poder hacer comparaciones con el grupo superviviente.
 
@@ -289,13 +293,6 @@ ggplot(data = titanic_train, aes(x=Age,fill=Supervivencia))+
 
 Observamos como el parámetro position=“hijo” nos da la proporción acumulada de un atributo dentro de otro. Parece que los niños tuvieron más posibilidad de salvarse.
 
-
-# ```{r}
-# ggplot(data = titanic_train, aes(x=Pclass, fill=Supervivencia))+
-#   geom_histogram(binwidth = 1)+
-#   ggtitle("Relacion Supervivencia en función de PClass: clase")
-# 
-# ``` 
 
 #### Precio del ticket
 ```{r}
@@ -562,7 +559,7 @@ plot(tabla_SST, col = c("black","#008000"), main = "SURVIVED vs. SEX")
 
 En los siguientes apartados, haremos los contrastes de hipótesis para seguir comparandos los grupos.
 
-### diferencia en proporción de supervivencia por genero
+### diferencia de supervivencia por edad
 
 En este caso, queremos comparar las medias de las muestras de los dos grupos, por lo que estamos ante un contraste de hipótesis bilateral de dos muestras independientes sobre la media. 
 
@@ -590,57 +587,116 @@ Si observamos la media de los dos grupos podemos ver que en el grupo supervivien
 
 ### diferencia en proporción de supervivencia por género
 
-Para estudiar el intervalo de confianza para la diferencia de proporciones en dos poblaciones independientes utilizamos la funcion de r propt.test
+Para estudiar el intervalo de confianza para la diferencia de proporciones en dos poblaciones independientes utilizamos la función de r propt.test
 
-comparamos los grupos supervivientes masculinos y femeninos , con el grupo hombre y mujeres
+comparamos los grupos supervivientes masculinos y femeninos , con el grupo hombre y mujeres.
 
+Las hipótesis que planteamos serían:
+
+H0: La proporción de supervivientes en hombres es igual que en mujeres. p1 = p2
+H1: La proporción de supervivientes en hombres no es igual que en mujeres. p1 != p2
 
 ```{r}
-titanic_train.superviviente <- titanic_train[titanic_train$Supervivencia=="SI",]
-titanic_train.naufrago<- titanic_train[titanic_train$Supervivencia=="NO",]
- 
-titanic_train.Mujer<- titanic_train[titanic_train$Sex=="female",]
-titanic_train.Hombre<- titanic_train[titanic_train$Sex=="male",]
+
+x1 <- titanic_train[titanic_train$Sex=="male",]
+x2 <- titanic_train[titanic_train$Sex=="female",]
+
+n1 <- nrow(x1)
+n2 <- nrow(x2)
+
+p1 <- sum(x1$Survived == 1)
+p2 <- sum(x2$Survived == 1)
+
 ``` 
 
 ```{r}
 
-prop.test (x = c
-           (dim(titanic_train.superviviente[titanic_train.superviviente$Sex=="male",][1]), dim(titanic_train.superviviente[titanic_train.superviviente$Sex=="female",][1])) , n=c(dim(titanic_train.Hombre[1]),dim(titanic_train.Mujer[1])), alternative="two.side", conf.level=0.95 , correct=FALSE)
+prop.test (x = c(p1, p2), n= c(n1,n2), alternative="two.side", conf.level=0.95 , correct=FALSE)
 
 ```
 
-Como se observa en la íltima línea del programa, la proporción de supervivientes en los hombre es del 18,89% y de las mujeres un 74,2%
-Mismos resultados que en el apartado donde calculamos la matriz de porcentaje de frecuencia
+Como se observa en la íltima línea del programa, la proporción de supervivientes en los hombre es del 18,89% y de las mujeres un 74,2%, mismos resultados que en el apartado donde calculamos la matriz de porcentaje de frecuencia. 
+
+Además, el valor p dado es menor que 0.05, lo que implica rechazar la hipótesis nula y confirmar que las proporciones de supervivencia por género son distintas.
 
 
 ### Diferencia de la proporción de supervivientes en cada clase
 
+De la misma manera, nos interesan estudiar las diferencias estadísticas según la clase. De manera que planteamos de nuevo un test de proprociones con estas hipótesis:
+
+H0: La proporción de supervivientes en las 3 clases son iguales. p1 = p2 = p3
+H0: La proporción de supervivientes en las 3 clases no son todos iguales.  p1 != p2 != p3
+
+```{r}
+
+x1 <- titanic_train[titanic_train$Pclass==1,]
+x2 <- titanic_train[titanic_train$Pclass==2,]
+x3 <- titanic_train[titanic_train$Pclass==3,]
 
 
+n1 <- nrow(x1)
+n2 <- nrow(x2)
+n3 <- nrow(x3)
+
+p1 <- sum(x1$Survived == 1)
+p2 <- sum(x2$Survived == 1)
+p3 <- sum(x3$Survived == 1)
+
+``` 
+
+```{r}
+
+prop.test (x = c(p1, p2, p3), n= c(n1,n2, n3), alternative="two.side", conf.level=0.95 , correct=FALSE)
+
+```
+
+Como se puede ver, volvemos a rechazar la hipótesis nula ya que las proporciones de supervivencia entre las diferentes clases no son iguales siendo la primera clase la que tiene mayor probabilidad de sobrevivir.
 
 
 ### Diferencia de la proporción de supervivientes dependiendo del puerto
 
+Por último, analizamos si la supervivencia se relaciona con el puerto de embargue. Se ha de tener en cuenta que tenemos muestras con puerto desconocido y no lo incluiremos para el análisis.
 
+Nos planeamos las siguientes hipótesis:
 
-
-
-# regresión logistica
-## R2
-Tal y como hemos visto en el trabajo con los datos nos resulta de gran interes poder predecir si un pasajero sobrevivió o no al hundimiento del Titanic
-
-De hecho existe una competicion en marcha en la plataforma Kaggle para "predecir" o clasificar este dataset.
-
-Para obtener un modelo de regresión  considerablemente eﬁciente, lo que haremos obtener varios modelos de regresión utilizando las variables que estén más correladas respecto a la superviiencia  Así, de entre todos los modelos que tengamos, escogeremos el mejor utilizando como criterio aquel que presente un mayor coeﬁciente de determinación (R2)
-
-
-
+H0: La proporción de supervivientes en los 3 puertos son iguales. p1 = p2 = p3
+H0: La proporción de supervivientes en los 3 puertos son no son todos iguales. p1 != p2 != p3
 
 ```{r}
 
-head(titanic_train)
+x1 <- titanic_train[titanic_train$Embarked=="S",]
+x2 <- titanic_train[titanic_train$Embarked=="C",]
+x3 <- titanic_train[titanic_train$Embarked=="Q",]
 
+
+n1 <- nrow(x1)
+n2 <- nrow(x2)
+n3 <- nrow(x3)
+
+p1 <- sum(x1$Survived == 1)
+p2 <- sum(x2$Survived == 1)
+p3 <- sum(x3$Survived == 1)
+
+``` 
+
+```{r}
+
+prop.test (x = c(p1, p2, p3), n= c(n1,n2, n3), alternative="two.side", conf.level=0.95 , correct=FALSE)
+```
+
+Una vez más demostramos que las proporciones son significativamente diferentes y que los viajeros del puerto "C" tiene mayor probabilidad de supervivencia.
+
+
+# regresión logistica (completo)
+
+Tal y como hemos visto en el trabajo con los datos nos resulta de gran interes poder predecir si un pasajero sobrevivió o no al hundimiento del Titanic.De hecho existe una competicion en marcha en la plataforma Kaggle para "predecir" o clasificar este dataset.
+
+El modelo que vamos a implementar es la regresión logística, puesto que la regresión linear predice valores continuos y en este caso nuestro objetivo es una variable categórica que indicará sí o no en la supervivencia.
+
+Para obtener un modelo de regresión  considerablemente eﬁciente, lo que haremos obtener varios modelos de regresión utilizando las variables que estén más correladas respecto a la superviiencia  Así, de entre todos los modelos que tengamos, escogeremos el mejor utilizando como criterio aquel que presente un menor criterio de información de Akaike (AIC).
+
+Definimos las variables dependiente e independientes.
+```{r}
 
 # Variable a predecir, si se salvo el pasajero
 Salvado = titanic_train$Survived
@@ -650,32 +706,47 @@ Genero =titanic_train$Sex
 TicketClase = titanic_train$Pclass
 Edad = titanic_train$Age
 PuertoE= titanic_train$Embarked
- 
-
-
-# Ajuste de un modelo lineal por mínimos cuadrados.
-modelo1<- lm(Salvado ~ Genero, data = titanic_train)
-modelo2<- lm(Salvado ~ Genero+TicketClase, data = titanic_train)
-modelo3 <-lm(Salvado ~ Genero+TicketClase+Edad, data = titanic_train) 
-modelo4 <-lm(Salvado ~ Genero+PuertoE+Edad, data = titanic_train) 
-modelo5 <-lm(Salvado ~ Genero+PuertoE+Edad+TicketClase, data = titanic_train) 
- 
-
-
-tabla.coeficientes <- matrix(c(1, summary(modelo1)$r.squared,
-2, summary(modelo2)$r.squared,
-3, summary(modelo3)$r.squared,
-4, summary(modelo4)$r.squared,
-5, summary(modelo5)$r.squared),
-ncol =2,byrow =TRUE)
-colnames(tabla.coeficientes) <- c("Modelo","R^2")
-tabla.coeficientes
-
 ```
-En este caso vemos que el 5 modelo es el más conveniente dado que tiene un mayor
-coeﬁciente de determinación. Ahora, empleando este modelo, podemos proceder a realizar
-predicciones de precios de vehículos como la siguiente:
 
+Aplicaremos la estrategia de adicción de variables para ir reduciendo el índice de AIC.
+
+```{r}
+modelo1<- glm(Salvado ~ Genero, data = titanic_train, family = binomial(link=logit))
+summary(modelo1)
+```
+
+Como se puede ver, el género resulta ser significativo para la predicción del modelo y el hecho de ser hombre contribuye negativamente a la supervivencia. 
+
+Añadimos la variable de clase.
+
+```{r}
+modelo2<- glm(Salvado ~ Genero + TicketClase, data = titanic_train, family = binomial(link=logit))
+summary(modelo2)
+```
+
+Vemos que reduce el índice de AIC de notablemente y la clase en la que se viaja también resulta significativo para la supervivencia. Cuanto mayor es su número, más contribuye a la supervivencia de forma negativa. 
+
+Ahora sumamos el efecto de la edad
+
+```{r}
+modelo3<- glm(Salvado ~ Genero + TicketClase + Edad, data = titanic_train, family = binomial(link=logit))
+summary(modelo3)
+```
+
+El incremento de la edad contribuye también negativamente a la supervivencia, aunque su efecto es bastante menor comparado con las demás variables.
+
+Por último, incluimos el puerto del embargue.
+
+```{r}
+modelo4<- glm(Salvado ~ Genero + TicketClase + Edad + PuertoE, data = titanic_train, family = binomial(link=logit))
+summary(modelo4)
+```
+
+A pesar de que el puerto de embargue reduce muy poco el valor de AIC también aporta cierta información a la hora de predicción. Cabe destacar que en este caso las muestras con puerto desconocido han sido evaluados como una categoría extra y el hecho de tener solo 2 casos que sobreviven está confundiendo el algoritmo a entender como factor de éxito para sobrevivir. 
+
+Dado que el modelo 4 da el mejor resultado de AIC, lo usaremos para las predicciones.
+
+Una prueba de predicción podría ser como el siguiente caso propuesto:
 ```{r}
 newdata <- data.frame(
 Genero = "female",
@@ -684,20 +755,104 @@ Edad = 38,
 TicketClase =1)
 
 ```
+
 Prediccion de si Sobrbevive o no
+
 ```{r}
-predict(modelo5, newdata)
+predict(modelo4, newdata, type='response')
 ```
-Al 87% podemos decir que sorevive
+
+El resultado nos indica que con probabilidad de 89% el individuo del ejemplo sobrevivirá.
 
 
 ## validación con conjunto de test
 
+En el conjunto de test también existen valores de NA en la edad, si no se encuentran disponible darán lugar a predicciones de NA, por lo que seguimos la misma estrategia de imputación para completar estos casos primero.
+
+```{r}
+
+titanic_test = kNN(titanic_test, variable = "Age",
+         dist_var = c("Pclass","Sex", "SibSp", "Parch", "Fare"), imp_var = FALSE)
+colSums(is.na(titanic_test))
+
+```
+
+La columna de Fare no está incluido en nuestro modelo, por lo que lo podemos dejar sin tratar.
+
+
+Seleccionamos los datos de validación.
+```{r}
+
+newdata <- titanic_test[,c("Pclass", "Sex", "Age", "Embarked")]
+colnames(newdata) <- c('TicketClase','Genero','Edad', 'PuertoE')
+
+result <- predict(modelo4, newdata, type='response')
+```
+
+El resultado que nos proporciona la regresión son probabilidades, tenemos que establecer criterios para categorizar estos en predicciones de supervivencia. 
+
+Por lo que para una probabilidad igual o encima de 0.5 consideramos que sobrevive, y consideramos que no si es por debajo de 0.5
+
+```{r}
+
+prediceted_survive <- result >= 0.5
+
+prediceted_survive[prediceted_survive == TRUE] <- 1
+prediceted_survive[prediceted_survive == FALSE] <- 0
+
+```
+
 ## bondad de ajuste
 
-### matriz de confusión
+Una forma para evaluar la bondad de ajuste en las GLM es el test de el test de Hosmer-Lemeshow. 
+
+```{r}
+if(!require(ResourceSelection)){
+    install.packages('ResourceSelection', repos='http://cran.us.r-project.org')
+    library(ResourceSelection)
+}
+```
+
+
+```{r}
+hoslem.test(titanic_train$Survived, fitted(modelo4), g=3)
+
+```
+
+Obtenemos un p-value mayor que 0.05, lo cuál nos indica que tenemos un modelo que ajusta a los datos reales.
  
 ### ROC
+
+Otra manera visual/numérica para evaluar el modelo es a través de la curva de ROC.
+
+```{r}
+if(!require(pROC)){
+    install.packages('pROC', repos='http://cran.us.r-project.org')
+    library(pROC)
+}
+```
+
+```{r}
+
+traindata <- titanic_train[,c("Pclass", "Sex", "Age", "Embarked")]
+colnames(traindata) <- c('TicketClase','Genero','Edad', 'PuertoE')
+
+prob = predict(modelo4, traindata, type="response")
+r = roc(titanic_train$Survived, prob, data = titanic_train)
+
+plot(r)
+
+
+```
+
+
+```{r}
+
+auc(r)
+
+```
+
+Tenemos un AUROC de 0.8518, con lo que el modelo discrimina de forma adecuada la variable dependiente.
 
 # Conclusiones
 # Código y exportación de datos
