@@ -856,11 +856,8 @@ auc(r)
 Tenemos un AUROC de 0.8518, con lo que el modelo discrimina de forma adecuada la variable dependiente.
 
 # Conclusiones
- 
- 
- 
-Como se ha visto con este conjunto de datos se trataba de responder la probabilidad de superviviencia de los pasajeros. 
 
+Como se ha visto con este conjunto de datos se trataba de responder la probabilidad de superviviencia de los pasajeros. 
 
 Previamente, se han sometido los datos a un preprocesamiento para manejar los casos de ceros o elementos vacíos y valores extremos (outliers). 
 Para el caso del primero, se ha hecho uso de
@@ -868,8 +865,6 @@ un método de imputación de valores de tal forma que no tengamos que eliminar r
 del conjunto de datos inicial y que la ausencia de valores no implique llegar a resultados
 poco certeros en los análisis.
 Para el caso de los valores extremos, se ha optado por incluir los valores   en los análisis dado que se pueden considerar válidos todos a pesar de presentar diferencia con la tendencia central de cada variable.
- 
-
  
 Una vez analizado los datos se han realizado pruebas estadística como es el análisis de correlación sobe el conjunto de datos para ver cuales de las variables del dataset titanic tenia mas influencia sobre la supervivencia.
  Para cada una de las variables, hemos podido ver cuáles son los resultados que arrojan (entre otros, mediante tablas y proporciones)
@@ -881,11 +876,24 @@ Mientras que el modelo de regresión logistica obtenido resulta de utilidad a la
 Asi hemos podido llegar a la conclusion que el genero, el puerto de embarque, la edad y el tipo de billete son las varibales que mas influyen a la hora de clasificar si un pasajero sobrevivio o no dadas unas características concretas.
 
 
- 
 # Código y exportación de datos
+
+
+Exportamos los dos juegos de datos limpios que hemos procesado a partir de los datos originales.
+```{r}
+write.csv(titanic_train, "titanic_train_clean.csv")
+write.csv(titanic_test, "titanic_test_clean.csv")
+
+```
+
+
+Estos archivos junto con el código fuente están subidos en el repositorio Github en esta dirección:
+
+[Repositorio Titanic](https://github.com/xiaolin-ye/Titanic)
+
 # Recursos básicos
 
-Material didáctico de:  Tipologia y Ciclo de Datos
+Material didáctico de:  Tipología y Ciclo de Datos
 
 Complementarios:
 
