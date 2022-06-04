@@ -21,6 +21,7 @@ knitr::opts_chunk$set(eval=T, echo=T)
 library(ggplot2)
 library(reshape2)
 
+tinytex::install_tinytex()
 
 if(!require(VIM)){
     install.packages('VIM', repos='http://cran.us.r-project.org')
@@ -30,7 +31,7 @@ if(!require(VIM)){
 ```
 
 *****
-# Descripción del dataset (completo)
+# Descripción del dataset 
 
 El dataset elegidos proviene de Kaggle, describe en él la información de los pasajeros de Titanic (género, edad...), las condiciones de embargue (tipo de clase, cabina..) y si sobrevivió el accidente. 
 
@@ -124,7 +125,7 @@ Gracias a la función str() sabemos  si las varibales son categoricas o numéric
     
 *****
 
-# Limipeza de datos (completo)
+# Limpieza de datos  
 
 Para poder generar un modelo preciso y adecuado, es de vital importancia seleccionar, limpiar y transformar los datos en el caso de que sea necesario. 
 
@@ -251,9 +252,9 @@ hist_counts$counts
 Como resumen, en este apartado no se hará tratamiento de ningún valor extremo ya que se pueden considerar válidos todos a pesar de presentar diferencia con la tendencia central de cada variable.
 
 
-# Análisis de los datos (completo)
+# Análisis de los datos 
 
-primero sacamos dimenmsión y factorizamos con un nueva variable para poder hacer comparaciones con el grupo superviviente.
+primero sacamos dimensión y factorizamos con un nueva variable para poder hacer comparaciones con el grupo superviviente.
 
 
 ## Análisis descriptivo
@@ -687,7 +688,7 @@ prop.test (x = c(p1, p2, p3), n= c(n1,n2, n3), alternative="two.side", conf.leve
 Una vez más demostramos que las proporciones son significativamente diferentes y que los viajeros del puerto "C" tiene mayor probabilidad de supervivencia.
 
 
-# regresión logistica (completo)
+# regresión logistica 
 
 Tal y como hemos visto en el trabajo con los datos nos resulta de gran interes poder predecir si un pasajero sobrevivió o no al hundimiento del Titanic.De hecho existe una competicion en marcha en la plataforma Kaggle para "predecir" o clasificar este dataset.
 
@@ -855,6 +856,32 @@ auc(r)
 Tenemos un AUROC de 0.8518, con lo que el modelo discrimina de forma adecuada la variable dependiente.
 
 # Conclusiones
+ 
+ 
+ 
+Como se ha visto con este conjunto de datos se trataba de responder la probabilidad de superviviencia de los pasajeros. 
+
+
+Previamente, se han sometido los datos a un preprocesamiento para manejar los casos de ceros o elementos vacíos y valores extremos (outliers). 
+Para el caso del primero, se ha hecho uso de
+un método de imputación de valores de tal forma que no tengamos que eliminar registros
+del conjunto de datos inicial y que la ausencia de valores no implique llegar a resultados
+poco certeros en los análisis.
+Para el caso de los valores extremos, se ha optado por incluir los valores   en los análisis dado que se pueden considerar válidos todos a pesar de presentar diferencia con la tendencia central de cada variable.
+ 
+
+ 
+Una vez analizado los datos se han realizado pruebas estadística como es el análisis de correlación sobe el conjunto de datos para ver cuales de las variables del dataset titanic tenia mas influencia sobre la supervivencia.
+ Para cada una de las variables, hemos podido ver cuáles son los resultados que arrojan (entre otros, mediante tablas y proporciones)
+
+Así, el análisis de correlación   nos ha permitido conocer cuáles de estas variables ejercen una mayor inﬂuencia sobre el la probabilidad de supervivencia del pasajero que embarco.
+
+Mientras que el modelo de regresión logistica obtenido resulta de utilidad a la hora de realizar predicciones sobre la supervivencia de un pasajero con unas caracteristicas dadas.
+
+Asi hemos podido llegar a la conclusion que el genero, el puerto de embarque, la edad y el tipo de billete son las varibales que mas influyen a la hora de clasificar si un pasajero sobrevivio o no dadas unas características concretas.
+
+
+ 
 # Código y exportación de datos
 # Recursos básicos
 
@@ -864,31 +891,5 @@ Complementarios:
 
 * Los descritos para la anterior PEC.
 * Fichero :train.csv :Titanic: Machine Learning from Disaster (https://www.kaggle.com/c/titanic)
-
-
-
-**Objetivos:**
-
-*1. Descripción del dataset. ¿Por qué es importante y qué pregunta/problema pretende responder?*
-
-*2. Integración y selección de los datos de interés a analizar. Puede ser el resultado de            adicionar    diferentes datasets o una subselección útil de los datos originales, en base al     objetivo que      se quiera conseguir*
-
-*3.Limpieza de los datos.*
-3.1.     ¿Los datos contienen ceros o elementos vacíos? Gestiona cada uno de estos casos.
-3.2.     Identifica y gestiona los valores extremos.
-
-*4.     Análisis de los datos.*
-4.1.     Selección de los grupos de datos que se quieren analizar/comparar (p. e., si se van a        comparar grupos de datos, ¿cuáles son estos grupos y qué tipo de análisis se van a aplicar?)
-4.2.     Comprobación de la normalidad y homogeneidad de la varianza.
-4.3.     Aplicación de pruebas estadísticas para comparar los grupos de datos. En función de los     datos y el objetivo del estudio, aplicar pruebas de contraste de hipótesis, correlaciones,        regresiones, etc. Aplicar al menos tres métodos de análisis diferentes.
-
-*5.  Representación de los resultados a partir de tablas y gráficas. Este apartado se puede   responder   a   lo   largo   de   la   práctica,   sin   necesidad   de   concentrar   todas   las representaciones en este punto de la práctica.* 
-
-  
-*6.     Resolución  del  problema.  A  partir  de  los  resultados  obtenidos,  ¿cuáles  son  las   conclusiones? ¿Los resultados permiten responder al problema?*
-  
-*7.     Código: Hay que adjuntar el código, preferiblemente en R, con el que se ha realizado la        limpieza, análisis y representación de los datos. Si lo preferís, también podéis trabajar     en Python.*
-
-
 
 
